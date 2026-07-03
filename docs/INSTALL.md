@@ -1,54 +1,42 @@
 # Installing Project Forge OS
 
-Forge OS is plain Markdown. Installing it means two things: putting this
-repo somewhere permanent, and making the skills visible to your agent.
-No servers, databases, cloud services, or external APIs.
+Forge OS has two parts, and both need to be in place: **the skills** (the
+instructions your agent follows) and **Forge Memory + templates** (the
+shared files every project reads and writes). No servers, databases, cloud
+services, or external APIs — everything below is files and git.
 
-## 1. Get the repo — fork first
+## 1. Install the skills
 
-Your Forge Memory lives *inside* this repo. If you work on a direct clone of
-the official repository, your personal memory and upstream updates end up in
-the same history and you can never pull cleanly. So:
+### Claude Code — via the skills CLI (recommended)
 
-1. **Fork** https://github.com/Reddzaa/project-forge-os on GitHub.
-2. **Clone your fork** to a permanent location — this path matters, because
-   every project's `forge/.forge.md` points back to it (`forge_repo`) to
-   find the global memory:
+```bash
+# Preview what's in the repo before installing anything
+npx skills add Reddzaa/Project-ForgeOS --list
 
-   ```
-   git clone https://github.com/<you>/project-forge-os C:\dev\project-forge-os
-   ```
+# Install all 12 skills for Claude Code, in this project
+npx skills add Reddzaa/Project-ForgeOS -a claude-code
 
-3. **Get updates later** by merging upstream — your memory commits and
-   upstream changes stay cleanly separable:
+# Install globally, so every project on this machine has them
+npx skills add Reddzaa/Project-ForgeOS -g -a claude-code
+```
 
-   ```
-   git remote add upstream https://github.com/Reddzaa/project-forge-os.git
-   git fetch upstream
-   git merge upstream/main
-   ```
+`-a` targets an agent (the [skills CLI](https://github.com/vercel-labs/skills)
+supports 40+ of them the same way); `-g` installs to your user-wide skills
+directory instead of just the current project. A single skill can be
+installed on its own with `--skill <name>`, e.g.
+`npx skills add Reddzaa/Project-ForgeOS --skill build-loop -a claude-code`.
 
-Any path works; `C:\dev\project-forge-os` is used in examples throughout.
-Commit your memory changes as you go — memory is data, and data deserves
-version history. (No GitHub account? A plain download works too; you just
-lose the easy update path.)
+### Claude Code — manual copy
 
-## 2. Make the skills available to your agent
+Copy the skill folders from `skills/` in a local clone (see step 2 below)
+into your skills directory:
 
-### Claude Code
+- **User-wide:** `~/.claude/skills/` (Windows: `C:\Users\<you>\.claude\skills\`)
+- **Per-project:** `<project>\.claude\skills\`
 
-Copy the skill folders into your skills directory:
-
-- **User-wide (recommended):** copy each folder from `skills/` into
-  `~/.claude/skills/` (Windows: `C:\Users\<you>\.claude\skills\`) — the
-  skills then work in every project.
-- **Per-project:** copy them into `<project>\.claude\skills\` instead.
-
-Claude Code picks them up by the `name` in each SKILL.md's frontmatter
-(`init-project`, `build-loop`, etc.).
-
-> When you update this repo, re-copy the skill folders. Your memory and
-> project files are never touched by a skill update.
+Claude Code reads each skill by the `name` in its SKILL.md frontmatter
+(`init-project`, `build-loop`, etc.) — the CLI above does the same copy for
+you, just faster.
 
 ### Codex-style agents / anything with an AGENTS.md
 
@@ -65,15 +53,37 @@ Project state lives in forge/ — read .forge.md first.
 ### Any other agent (including future ones)
 
 Paste the relevant SKILL.md content into the session, or tell the agent to
-read the file. Skills are self-contained instructions; all state is in
-files. Nothing else is required.
+read the file. Skills are self-contained instructions, following the open
+[Agent Skills](https://agentskills.io) standard — nothing here is specific
+to one vendor.
+
+## 2. Connect Forge Memory and templates (required)
+
+The `skills` CLI only installs the `skills/` folder — it doesn't fetch
+`templates/` or `memory/`, which `init-project` and the memory skills need a
+real, permanent copy of. Every project's `forge/.forge.md` stores a
+`forge_repo` path pointing at this copy.
+
+**Fork first, then clone your fork** — not the original repo directly. Your
+Forge Memory will accumulate inside this clone's history, and forking keeps
+your memory and upstream updates on separable paths instead of one that
+conflicts with the other:
+
+```bash
+git clone https://github.com/<you>/Project-ForgeOS C:\dev\project-forge-os
+```
+
+Any path works; `C:\dev\project-forge-os` is used in examples throughout.
+Commit your memory changes as you go — memory is data, and data deserves
+version history. (No GitHub account? A plain download works too; you just
+lose the easy update path below.)
 
 ## 3. Set up a project
 
 In your project, tell your agent:
 
 > "Use the init-project skill from C:\dev\project-forge-os to set up Forge
-> in this project."
+> in this project" — or just `/init-project` if the skill is installed.
 
 It creates the `forge/` folder from `templates/project/` and records the
 repo path in `forge/.forge.md`. Manual alternative: copy
@@ -84,18 +94,29 @@ yourself — every `{placeholder}` is meant to be replaced.
 > hides files like that by default — it's easy to lose when copying by hand.
 > Copy from a terminal instead
 > (`Copy-Item -Recurse templates\project <your-project>\forge`) or enable
-> hidden files, and verify all **seven** files arrived. The doctor skill
+> hidden files, and verify all **seven** files arrived. The `doctor` skill
 > checks this too.
 
 ## 4. Verify
 
-Ask your agent to run the **doctor** skill on the project. A clean report
-means you're installed correctly, including the memory link.
+Ask your agent to run the **doctor** skill (or `/doctor`) on the project. A
+clean report means you're installed correctly, including the memory link.
 
 ## Updating Forge OS
 
-`git fetch upstream && git merge upstream/main` (see step 1), re-copy skills
-to your agent's skill directory, and check `CHANGELOG.md`. Existing projects
-keep working — newer skills always read older `forge/` folders (see README
-§ Versioning). Your `memory/` lives in *your fork's* history and is never
-overwritten by an upstream skill or template change.
+```bash
+git fetch upstream
+git merge upstream/main
+```
+
+(First time: `git remote add upstream https://github.com/Reddzaa/Project-ForgeOS.git`.)
+Then re-run the skills CLI (or re-copy skill folders) and check
+`CHANGELOG.md`. Existing projects keep working — newer skills always read
+older `forge/` folders (see the README's Versioning note). Your `memory/`
+lives in *your fork's* history and is never overwritten by an upstream
+skill or template change.
+
+## Next step
+
+Once installed, follow [docs/FIRST-PROJECT.md](FIRST-PROJECT.md) for a
+complete walkthrough of the first project loop.
