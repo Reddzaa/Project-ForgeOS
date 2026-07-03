@@ -1,6 +1,6 @@
 # Project Forge OS
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue) ![License: MIT](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-0.2.0-blue) ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
 **A Markdown-first skill system that gives AI coding agents engineering discipline — and gives you a memory that survives every project.**
 
@@ -95,47 +95,34 @@ Every skill is a `SKILL.md` file — a complete, self-contained instruction set.
 
 ## Installation
 
-Forge OS has two parts, and installation covers both:
+Forge OS installs as one connected system: skills go into your agent, and this repo's `templates/` and `memory/` get registered so every project can find them automatically. No servers, no manual path-editing.
 
-1. **The skills** — the instructions your agent follows. Fastest via the `skills` CLI.
-2. **Forge Memory and templates** — the shared files every project reads and writes. These aren't part of the `skills/` folder, so they need their own copy of the repo, kept somewhere permanent.
-
-### 1. Install the skills
+### Windows (recommended)
 
 ```bash
-# Preview what's in the repo before installing anything
-npx skills add Reddzaa/Project-ForgeOS --list
-```
-
-```bash
-# Install all 12 skills for Claude Code, in this project
-npx skills add Reddzaa/Project-ForgeOS -a claude-code
-```
-
-```bash
-# Install globally, so every project on this machine has them
-npx skills add Reddzaa/Project-ForgeOS -g -a claude-code
-```
-
-- `--list` previews the skills in the repo without installing anything.
-- `-a claude-code` (or `--agent`) installs for Claude Code specifically — the [skills CLI](https://github.com/vercel-labs/skills) supports 40+ agents the same way.
-- `-g` (or `--global`) installs to your user-wide skills directory instead of just this project.
-
-Using a different agent, or want to install by hand instead? See [docs/INSTALL.md](docs/INSTALL.md) for the manual path (Codex-style agents, AGENTS.md, or a plain copy).
-
-### 2. Connect Forge Memory (required)
-
-Fork this repo, then clone your fork somewhere permanent:
-
-```bash
+# 1. Fork this repo, then clone your fork somewhere permanent
 git clone https://github.com/<you>/Project-ForgeOS C:\dev\project-forge-os
+cd C:\dev\project-forge-os
+
+# 2. Run the installer
+.\install.ps1
 ```
 
-Each project's `forge/.forge.md` points at this path (`forge_repo`) to find `templates/` and `memory/`. Forking — rather than cloning the original directly — means you can pull upstream updates without ever conflicting with your own accumulated memory. Full details, including how to merge updates later, are in [docs/INSTALL.md](docs/INSTALL.md).
+`install.ps1` installs all 12 skills for Claude Code (via the `skills` CLI if Node is available, or by copying the skill folders directly if it isn't) and sets a `FORGE_OS_HOME` environment variable pointing at this clone — that's what lets `init-project` find `templates/` and `memory/` in every project, with nothing to configure by hand. It's safe to re-run any time.
+
+Prefer npm to PowerShell directly? `npm run install-forge` runs the exact same script.
+
+Forking rather than cloning the original directly means you can pull upstream updates later without ever conflicting with your own accumulated memory — see [docs/INSTALL.md](docs/INSTALL.md) for the update flow, installer parameters (`-Scope Project`, `-Agent`, `-Force`), and what to do if something goes wrong.
+
+### Other agents, other platforms
+
+The installer is Windows-first, but Forge OS itself isn't. See [docs/INSTALL.md](docs/INSTALL.md) for the manual, OS-agnostic path: installing skills with the `skills` CLI directly (any of its 40+ supported agents), wiring up Codex-style agents via `AGENTS.md`, and connecting memory by hand.
 
 ## After Installation
 
-Restart Claude Code (or reload the window) so it picks up the newly installed skills. Each skill is then available two ways: Claude invokes it automatically when your request matches what it does, or you invoke it directly with a slash command:
+Restart Claude Code (or reload the window) so it picks up the newly installed skills. Then run `/doctor` once — a clean report confirms both halves of the install worked: the skills are in place, and `FORGE_OS_HOME` resolves to a real Forge OS repo with `templates/` and `memory/` in it.
+
+Each skill is then available two ways: Claude invokes it automatically when your request matches what it does, or you invoke it directly with a slash command:
 
 ```
 /idea-filter
@@ -172,6 +159,8 @@ project-forge-os/
 ├── memory/             # global Forge Memory: lessons, stack notes, profile, project history
 ├── examples/           # a complete worked example project (weekend-mvp)
 ├── docs/               # install guide, first-project walkthrough, principles, future ideas
+├── install.ps1         # Windows installer: skills + FORGE_OS_HOME in one run
+├── package.json        # optional npm wrapper (`npm run install-forge`) around install.ps1
 ├── VERSION
 └── CHANGELOG.md
 ```
@@ -181,6 +170,7 @@ project-forge-os/
 - **`memory/`** — the curated, cross-project knowledge base described below.
 - **`examples/`** — a real project (a Windows clipboard-snippet launcher) shown at every stage: brief, plan, journal, one captured error, and a retro.
 - **`docs/`** — everything about using and understanding the system that isn't a skill or a template.
+- **`install.ps1` / `package.json`** — the installer described above. Neither is required reading to use Forge OS day to day; they exist purely to wire everything else up once.
 
 ## Forge Memory
 
@@ -226,6 +216,12 @@ Yes. Run `init-project` inside a project that already has code — it adds a `fo
 **Can I create my own skills?**
 Yes. A skill is a folder with a `SKILL.md` following the same frontmatter format used here (`name`, `description`) — it follows the open [Agent Skills](https://agentskills.io) standard, so nothing about it is specific to this repo or to one agent.
 
+**What is `FORGE_OS_HOME`?**
+A per-user environment variable, set once by `install.ps1`, that points at your local clone of this repo. It's how `init-project`, `doctor`, and the memory skills find `templates/` and `memory/` without you typing a path into every project. You can also set it by hand — see [docs/INSTALL.md](docs/INSTALL.md).
+
+**I moved or re-cloned the repo — now what?**
+Re-run `install.ps1` (or `npm run install-forge`) from the new location; it updates `FORGE_OS_HOME` to match. Existing projects keep their own `forge_repo` value until you re-run `init-project` or fix it by hand — `doctor` will flag the mismatch either way.
+
 ## Contributing
 
 Issues and pull requests are welcome — bug reports, documentation fixes, and clarifications on existing skills are especially useful, since this system is only as good as the discipline it actually enforces in practice.
@@ -236,11 +232,11 @@ Issues and pull requests are welcome — bug reports, documentation fixes, and c
 
 ## Roadmap
 
-**Current — v0.1**
-The 12 skills, project templates, Forge Memory, a complete worked example, and this documentation, as shipped.
+**Current — v0.2**
+Everything from v0.1 (the 12 skills, project templates, Forge Memory, a complete worked example), plus a one-command Windows installer (`install.ps1`) that installs skills and connects Forge Memory and templates via `FORGE_OS_HOME` — with `doctor` able to detect a disconnected or misconfigured install.
 
-**Future direction — v0.2 and beyond**
-No new features are committed yet. The direction is improving what already exists based on real usage: more reliable consistency checks between skills and templates, a smoother install and update experience, sharper documentation where the walkthrough turns out to be unclear, and additional skills only where repeated real-world use shows a genuine gap. The full, honest parking lot — including ideas explicitly rejected for now — lives in [docs/FUTURE.md](docs/FUTURE.md).
+**Future direction — v0.3 and beyond**
+No new features are committed yet. The direction is improving what already exists based on real usage: an update flow that diffs template changes instead of a manual `git merge`, more reliable consistency checks between skills and templates, sharper documentation where the walkthrough turns out to be unclear, and additional skills only where repeated real-world use shows a genuine gap. The full, honest parking lot — including ideas explicitly rejected for now — lives in [docs/FUTURE.md](docs/FUTURE.md).
 
 ## Versioning
 

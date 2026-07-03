@@ -1,0 +1,10 @@
+{
+  "name": "project-forge-os",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Markdown-first skill system for AI-assisted solo development. This package.json only wraps the Windows installer — Forge OS itself has no runtime dependencies.",
+  "license": "MIT",
+  "scripts": {
+    "install-forge": "powershell -NoProfile -ExecutionPolicy Bypass -File ./install.ps1"
+  }
+}

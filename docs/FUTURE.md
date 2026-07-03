@@ -21,9 +21,11 @@ file is a promise.
 
 ## Worth considering later
 
-- **install/update helper script** (PowerShell) — copies skills to the
-  agent's skill directory and diffs template changes on update. Manual copy
-  works fine at v0.1 scale.
+- **Update diffing in `install.ps1`** — the v0.2 installer wires up skills
+  and `FORGE_OS_HOME` on first run; it doesn't yet diff template changes on
+  update (that's still `git merge upstream/main`, per docs/INSTALL.md).
+  Worth adding once template changes across versions are common enough to
+  make a manual diff painful.
 - **Scope tiers beyond weekend/mvp/product** — maintenance cadence and
   periodic-retro scheduling for long-lived (`product`) projects.
 - **Lesson conflict handling** — when two active lessons disagree, the
